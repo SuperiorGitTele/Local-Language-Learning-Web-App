@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AfroLingua - Onboarding 3</title>
+    <link rel="stylesheet" href="/onboarding/styling/onboarding3.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Progress Indicator -->
+    <div class="progress-indicator" id="progressIndicator">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Overlay for Blur -->
+    <div class="overlay" id="overlay"></div>
+
+    <header>
+      <nav>
+        <h1 class="logo">AfroLingua</h1>
+      </nav>
+    </header>
+
+    <main id="mainContent">
+      <section class="onboarding-section">
+        <h1 id="mainText">How much <span id="selectedLanguage"></span> do you know?</h1>
+        <p class="subtext" id="subtext">Start your personalized <span id="selectedLanguageSub"></span> journey</p>
+
+        <!-- Proficiency Containers -->
+        <div class="grid-container">
+          <div class="proficiency-container" data-value="beginner">
+            <span class="proficiency-text">I'm a complete beginner</span>
+            <span class="proficiency-subtext">Start from scratch</span>
+          </div>
+          <div class="proficiency-container" data-value="intermediate">
+            <span class="proficiency-text">I know some <span id="selectedLanguageBody"></span></span>
+            <span class="proficiency-subtext">Find your level</span>
+            <div class="level-scale" id="levelScale" style="display: none;">
+              <label for="proficiencyLevel">Select your level:</label>
+              <select id="proficiencyLevel">
+                <option value="Easy">Easy</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Elementary">Elementary</option>
+                <option value="Pre-Intermediate">Pre-Intermediate</option>
+                <option value="Intermediate" selected>Intermediate</option>
+                <option value="Upper-Intermediate">Upper-Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Proficient">Proficient</option>
+                <option value="Expert">Expert</option>
+                <option value="Master">Master</option>
+                <option value="Specialist">Specialist</option>
+                <option value="Elite">Elite</option>
+                <option value="Legendary">Legendary</option>
+                <option value="Epic">Epic</option>
+                <option value="Extreme">Extreme</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Button Moved Here -->
+        <button id="nextButton" disabled>Next</button>
+      </section>
+    </main>
+
+    <footer>
+      <!-- Footer remains empty or can be used for other purposes -->
+    </footer>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedLanguage = urlParams.get("language");
+      const selectedGoal = urlParams.get("goal");
+      const selectedFlag = urlParams.get("flag");
+
+      const selectedLanguageElement = document.getElementById("selectedLanguage");
+      const selectedLanguageSubElement = document.getElementById("selectedLanguageSub");
+      const selectedLanguageBodyElement = document.getElementById("selectedLanguageBody");
+
+      if (selectedLanguage) {
+        selectedLanguageElement.textContent = selectedLanguage;
+        selectedLanguageSubElement.textContent = selectedLanguage;
+        selectedLanguageBodyElement.textContent = selectedLanguage;
+        selectedLanguageElement.style.background = "linear-gradient(to right, #000000, #ffd700)";
+        selectedLanguageElement.style.webkitBackgroundClip = "text";
+        selectedLanguageElement.style.webkitTextFillColor = "transparent";
+      } else {
+        selectedLanguageElement.textContent = "this language";
+        selectedLanguageSubElement.textContent = "this language";
+        selectedLanguageBodyElement.textContent = "this language";
+      }
+
+      // Proficiency Containers Logic
+      const proficiencyContainers = document.querySelectorAll(".proficiency-container");
+      const nextButton = document.getElementById("nextButton");
+      const levelScale = document.getElementById("levelScale");
+
+      proficiencyContainers.forEach((container) => {
+        container.addEventListener("click", () => {
+          proficiencyContainers.forEach((c) => c.classList.remove("selected"));
+          container.classList.add("selected");
+
+          // Show level scale if intermediate is selected
+          if (container.dataset.value === "intermediate") {
+            levelScale.style.display = "block";
+          } else {
+            levelScale.style.display = "none";
+          }
+
+          nextButton.disabled = false;
+        });
+      });
+
+      // Next Button Logic with Blur and Progress Indicator
+      nextButton.addEventListener("click", () => {
+        const selectedContainer = document.querySelector(".proficiency-container.selected");
+        if (selectedContainer) {
+          document.getElementById("overlay").style.display = "block";
+          document.getElementById("progressIndicator").style.display = "flex";
+          document.getElementById("mainContent").classList.add("blur");
+
+          setTimeout(() => {
+            if (selectedContainer.dataset.value === "beginner") {
+              window.location.href = `../screens/home.html?language=${selectedLanguage}&flag=${selectedFlag}`;
+            } else {
+              const selectedLevel = document.getElementById("proficiencyLevel").value;
+              window.location.href = `../screens/home.html?language=${selectedLanguage}&flag=${selectedFlag}&level=${selectedLevel}`;
+            }
+          }, 1500); // 1.5s delay
+        }
+      });
+    </script>
+  </body>
+</html>

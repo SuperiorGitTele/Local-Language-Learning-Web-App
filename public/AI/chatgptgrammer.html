@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Chat - AfroLingua</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/AI/styles/gptgrammer.css" />
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+      .error-message {
+        color: #d32f2f;
+        background: #ffebee;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .error-message button {
+        background: #d32f2f;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress-indicator" id="progressIndicator">
+      <div class="spinner"></div>
+    </div>
+    <div class="container" id="grammarContainer" style="display: none;">
+      <div class="sidebar">
+        <h2>Settings</h2>
+        <label for="languageSelect">Language:</label>
+        <select id="languageSelect">
+          <option value="yoruba">Yoruba</option>
+          <option value="swahili">Swahili</option>
+          <option value="zulu">Zulu</option>
+          <option value="amharic">Amharic</option>
+          <option value="hausa">Hausa</option>
+        </select>
+        <h3>Progress</h3>
+        <p>Rules Learned: <span id="rulesLearned">0</span></p>
+        <h3>History</h3>
+        <ul id="historyList" class="history-list"></ul>
+      </div>
+      <div class="main-content">
+        <h1><span id="selectedLanguage"></span> Grammar Rules & Sentence Structure</h1>
+        <div class="difficulty-display" id="difficultyDisplay">Difficulty: Easy (1/15)</div>
+        <div class="content-wrapper">
+          <div id="grammarContent" class="grammar-area">
+            <p class="welcome">Welcome to Grammar Chat! Click "Generate Rule" to begin your learning journey.</p>
+          </div>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+            <p class="progress-label" id="progressLabel">Progress to Next Level: 0%</p>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="generateButton">Generate Rule</button>
+          <button id="nextButton" style="display: none;">Next Rule</button>
+        </div>
+        <p class="timer-display" id="timerDisplay">Interaction Time: 0s</p>
+        <div class="level-up-message" id="levelUpMessage"></div>
+      </div>
+    </div>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgUoo-ZcYNoWJbtAbjhnsh7ZKy_PXl4oU",
+        authDomain: "afrolingua-ff97d.firebaseapp.com",
+        projectId: "afrolingua-ff97d",
+        storageBucket: "afrolingua-ff97d.appspot.com",
+        messagingSenderId: "935074229602",
+        appId: "1:935074229602:web:d795d5cf58c7696a6dd03b",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Elements
+      const grammarContent = document.getElementById("grammarContent");
+      const generateButton = document.getElementById("generateButton");
+      const nextButton = document.getElementById("nextButton");
+      const timerDisplay = document.getElementById("timerDisplay");
+      const selectedLanguageElement = document.getElementById("selectedLanguage");
+      const languageSelect = document.getElementById("languageSelect");
+      const difficultyDisplay = document.getElementById("difficultyDisplay");
+      const progressBar = document.getElementById("progressBar");
+      const progressLabel = document.getElementById("progressLabel");
+      const levelUpMessage = document.getElementById("levelUpMessage");
+      const progressIndicator = document.getElementById("progressIndicator");
+      const grammarContainer = document.getElementById("grammarContainer");
+      const rulesLearned = document.getElementById("rulesLearned");
+      const historyList = document.getElementById("historyList");
+
+      // State
+      let selectedLanguage = "yoruba";
+      let currentRuleIndex = -1;
+      let rules = [];
+      let history = [];
+      let startTime = null;
+      let interactionTime = 0;
+      let languageTimeSpent = 0;
+      let difficultyLevel = 1;
+      let rulesLearnedCount = 0;
+      const difficultyNames = [
+        "Easy", "Beginner", "Elementary", "Pre-Intermediate", "Intermediate",
+        "Upper-Intermediate", "Advanced", "Proficient", "Expert", "Master",
+        "Specialist", "Elite", "Legendary", "Epic", "Extreme"
+      ];
+      const difficultyThresholds = [
+        1800, 2700, 3600, 5400, 7200, 9000, 10800, 12600, 14400, 16200,
+        18000, 19800, 21600, 23400
+      ];
+      const positiveMessages = [
+        "Great job! You've mastered another level!",
+        "Congratulations! Your skills are soaring!",
+        "Well done! You're a language champion!",
+        "Awesome progress! Keep shining!",
+        "Level up! You're unstoppable!"
+      ];
+
+      async function getUserData() {
+        try {
+          const user = await new Promise((resolve) => auth.onAuthStateChanged(resolve));
+          if (!user) throw new Error("No user logged in");
+
+          const urlParams = new URLSearchParams(window.location.search);
+          selectedLanguage = urlParams.get("language") || "yoruba";
+          selectedLanguageElement.textContent = selectedLanguage;
+          languageSelect.value = selectedLanguage;
+
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists && !urlParams.get("language")) {
+            selectedLanguage = userDoc.data().selectedLanguage || "yoruba";
+            selectedLanguageElement.textContent = selectedLanguage;
+            languageSelect.value = selectedLanguage;
+          }
+
+          const languageDoc = await db.collection("AIgrammer").doc(`${user.uid}_${selectedLanguage}`).get();
+          if (languageDoc.exists) {
+            languageTimeSpent = languageDoc.data().languageTimeSpent || 0;
+            difficultyLevel = languageDoc.data().difficulty || 1;
+            rulesLearnedCount = languageDoc.data().rulesLearned || 0;
+          } else {
+            languageTimeSpent = 0;
+            difficultyLevel = 1;
+            rulesLearnedCount = 0;
+          }
+
+          updateDifficultyDisplay();
+          updateProgressBar();
+          updateStats();
+          return user.uid;
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          grammarContent.innerHTML = "<p class='error'>Failed to load user data. Please try again.</p>";
+          return null;
+        }
+      }
+
+      async function updateFirestoreTime(userId, timeSpent, rulesDelta = 0) {
+        if (!userId) return;
+
+        const previousDifficulty = difficultyLevel;
+        languageTimeSpent += timeSpent;
+        rulesLearnedCount += rulesDelta;
+
+        let newDifficulty = 1;
+        for (let i = 0; i < difficultyThresholds.length; i++) {
+          if (languageTimeSpent >= difficultyThresholds[i]) newDifficulty = i + 2;
+          else break;
+        }
+        difficultyLevel = Math.min(15, newDifficulty);
+
+        try {
+          await db.collection("AIgrammer").doc(`${userId}_${selectedLanguage}`).set({
+            userId: userId,
+            language: selectedLanguage,
+            languageTimeSpent: languageTimeSpent,
+            difficulty: difficultyLevel,
+            rulesLearned: rulesLearnedCount,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+
+          updateDifficultyDisplay();
+          updateProgressBar();
+          updateStats();
+          if (difficultyLevel > previousDifficulty && difficultyLevel <= 15) showLevelUpCelebration();
+        } catch (error) {
+          console.error("Error updating Firestore:", error);
+        }
+      }
+
+      function updateDifficultyDisplay() {
+        difficultyDisplay.textContent = `Difficulty: ${difficultyNames[difficultyLevel - 1]} (${difficultyLevel}/15)`;
+      }
+
+      function updateProgressBar() {
+        const currentThreshold = difficultyLevel === 1 ? 0 : difficultyThresholds[difficultyLevel - 2];
+        const nextThreshold = difficultyLevel === 15 ? difficultyThresholds[difficultyThresholds.length - 1] : difficultyThresholds[difficultyLevel - 1];
+        const progressRange = nextThreshold - currentThreshold;
+        const progressMade = languageTimeSpent - currentThreshold;
+        const progressPercentage = Math.min(100, Math.max(0, (progressMade / progressRange) * 100));
+
+        progressBar.style.width = `${progressPercentage}%`;
+        progressLabel.textContent = `Progress to ${difficultyNames[difficultyLevel]}: ${Math.round(progressPercentage)}%`;
+      }
+
+      function updateStats() {
+        rulesLearned.textContent = rulesLearnedCount;
+      }
+
+      function showLevelUpCelebration() {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#000000', '#ffd700']
+        });
+
+        const randomMessage = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+        levelUpMessage.textContent = `${randomMessage} Now at ${difficultyNames[difficultyLevel - 1]}!`;
+        levelUpMessage.style.display = 'block';
+        setTimeout(() => levelUpMessage.style.display = 'none', 3000);
+      }
+
+      function startTimer() {
+        if (!startTime) {
+          startTime = Date.now();
+          updateTimer();
+        }
+      }
+
+      function updateTimer() {
+        if (startTime) {
+          interactionTime = Math.floor((Date.now() - startTime) / 1000);
+          timerDisplay.textContent = `Interaction Time: ${interactionTime}s`;
+          requestAnimationFrame(updateTimer);
+        }
+      }
+
+      function resetTimer() {
+        const elapsed = interactionTime;
+        startTime = Date.now();
+        return elapsed;
+      }
+
+      async function fetchGrammarRule() {
+        progressIndicator.style.display = "block";
+        generateButton.disabled = true;
+        nextButton.disabled = true;
+        
+        try {
+          console.log("Fetching grammar rule for:", selectedLanguage, "at difficulty:", difficultyLevel);
+          const response = await fetch("http://localhost:5000/getGrammarRule", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({ 
+              language: selectedLanguage, 
+              difficulty: difficultyLevel 
+            }),
+          });
+
+          console.log("Response status:", response.status);
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("Error response:", errorData);
+            throw new Error(errorData.error || `Server responded with status ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("API response:", result);
+          
+          if (!result.success) {
+            throw new Error(result.error || "Unknown error from server");
+          }
+
+          const content = result.data.trim();
+          const ruleMatch = content.match(/Rule:\s*(.+)/);
+          const exampleMatch = content.match(/Example:\s*(.+)/);
+          
+          return {
+            rule: ruleMatch ? ruleMatch[1] : "No rule found.",
+            example: exampleMatch ? exampleMatch[1] : "No example found."
+          };
+        } catch (error) {
+          console.error("Error fetching grammar rule:", error);
+          grammarContent.innerHTML = `
+            <div class="error-message">
+              <p>Error loading grammar rule:</p>
+              <p>${error.message}</p>
+              <button onclick="generateRule()">Try Again</button>
+            </div>
+          `;
+          return null;
+        } finally {
+          progressIndicator.style.display = "none";
+          generateButton.disabled = false;
+          nextButton.disabled = false;
+        }
+      }
+
+      async function generateRule() {
+        if (!startTime) startTimer();
+
+        if (currentRuleIndex >= 0) {
+          const timeSpent = resetTimer();
+          await updateFirestoreTime(userId, timeSpent, 1);
+        }
+
+        const newRule = await fetchGrammarRule();
+        if (!newRule) return;
+
+        rules.push(newRule);
+        history.unshift(newRule.rule);
+        if (history.length > 5) history.pop();
+        currentRuleIndex = rules.length - 1;
+        displayRule(newRule);
+        renderHistory();
+        
+        generateButton.style.display = "none";
+        nextButton.style.display = "inline-block";
+      }
+
+      function displayRule(rule) {
+        grammarContent.innerHTML = `
+          <div class="rule-card">
+            <h2>Grammar Rule</h2>
+            <p>${rule.rule}</p>
+            <br>
+            <h2>Example</h2>
+            <p>${rule.example}</p>
+          </div>
+        `;
+      }
+
+      function renderHistory() {
+        historyList.innerHTML = history.map(rule => `<li>${rule}</li>`).join('') || '<li class="no-history">No recent rules</li>';
+      }
+
+      let userId;
+      getUserData().then((uid) => {
+        userId = uid;
+        progressIndicator.style.display = "none";
+        grammarContainer.style.display = "flex";
+
+        generateButton.addEventListener("click", generateRule);
+        nextButton.addEventListener("click", generateRule);
+
+        languageSelect.addEventListener("change", () => {
+          selectedLanguage = languageSelect.value;
+          selectedLanguageElement.textContent = selectedLanguage;
+          rules = [];
+          history = [];
+          currentRuleIndex = -1;
+          languageTimeSpent = 0;
+          difficultyLevel = 1;
+          rulesLearnedCount = 0;
+          grammarContent.innerHTML = "<p class='welcome'>Click 'Generate Rule' to begin your learning journey.</p>";
+          generateButton.style.display = "inline-block";
+          nextButton.style.display = "none";
+          updateFirestoreTime(userId, 0);
+          renderHistory();
+          
+          // Update URL without reloading
+          const url = new URL(window.location);
+          url.searchParams.set('language', selectedLanguage);
+          window.history.pushState({}, '', url);
+        });
+      }).catch((error) => {
+        console.error("Initialization failed:", error);
+        progressIndicator.style.display = "none";
+        grammarContainer.style.display = "flex";
+      });
+
+      window.addEventListener("beforeunload", async () => {
+        if (startTime && userId) {
+          const totalTime = Math.floor((Date.now() - startTime) / 1000);
+          await updateFirestoreTime(userId, totalTime);
+        }
+      });
+    </script>
+  </body>
+</html>

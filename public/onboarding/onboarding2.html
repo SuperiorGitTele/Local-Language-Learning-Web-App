@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AfroLingua - Set a Daily Study Goal</title>
+    <link rel="stylesheet" href="/onboarding/styling/onboarding2.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Progress Indicator -->
+    <div class="progress-indicator" id="progressIndicator">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Overlay for Blur -->
+    <div class="overlay" id="overlay"></div>
+
+    <header>
+      <nav>
+        <h1 class="logo">AfroLingua</h1>
+      </nav>
+    </header>
+
+    <main id="mainContent">
+      <section class="onboarding-section">
+        <h1>Set a Daily Study Goal</h1>
+        <p class="subtext" id="subtext">
+          Create a learning habit to improve your
+          <span id="selectedLanguage"></span>
+        </p>
+
+        <!-- Study Goal Containers -->
+        <div class="grid-container">
+          <div class="study-goal" data-value="5">
+            <span>5 minutes/day</span>
+            <span class="intensity-level">Casual</span>
+          </div>
+          <div class="study-goal" data-value="10">
+            <span>10 minutes/day</span>
+            <span class="intensity-level">Regular</span>
+          </div>
+          <div class="study-goal" data-value="15">
+            <span>15 minutes/day</span>
+            <span class="intensity-level">Serious</span>
+          </div>
+          <div class="study-goal" data-value="25">
+            <span>25 minutes/day</span>
+            <span class="intensity-level">Intense</span>
+          </div>
+          <div class="study-goal" data-value="30">
+            <span>30 minutes/day</span>
+            <span class="intensity-level">Competitive</span>
+          </div>
+          <div class="study-goal" data-value="45">
+            <span>45 minutes/day</span>
+            <span class="intensity-level">Pro</span>
+          </div>
+        </div>
+
+        <!-- Next Button Moved Here -->
+        <button id="nextButton" disabled>Next</button>
+      </section>
+    </main>
+
+    <footer>
+      <!-- Footer remains empty or can be used for other purposes -->
+    </footer>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedLanguage = urlParams.get("language");
+      const selectedReason = urlParams.get("reason");
+      const selectedFlag = urlParams.get("flag");
+
+      const subtextElement = document.getElementById("subtext");
+      if (selectedLanguage) {
+        subtextElement.querySelector("#selectedLanguage").textContent = selectedLanguage;
+      } else {
+        subtextElement.querySelector("#selectedLanguage").textContent = "this language";
+      }
+
+      // Study Goal Selection Logic
+      const studyGoals = document.querySelectorAll(".study-goal");
+      const nextButton = document.getElementById("nextButton");
+
+      studyGoals.forEach((goal) => {
+        goal.addEventListener("click", () => {
+          studyGoals.forEach((g) => g.classList.remove("selected"));
+          goal.classList.add("selected");
+          nextButton.disabled = false;
+        });
+      });
+
+      // Next Button Logic with Blur and Progress Indicator
+      nextButton.addEventListener("click", () => {
+        const selectedGoal = document.querySelector(".study-goal.selected");
+        if (selectedGoal) {
+          // Show blur and progress indicator
+          document.getElementById("overlay").style.display = "block";
+          document.getElementById("progressIndicator").style.display = "flex";
+          document.getElementById("mainContent").classList.add("blur");
+
+          // Simulate processing with a delay before redirect
+          setTimeout(() => {
+            window.location.href = `onboarding3.html?goal=${selectedGoal.dataset.value}&language=${selectedLanguage}&flag=${selectedFlag}`;
+          }, 1500); // 1.5s delay
+        }
+      });
+    </script>
+  </body>
+</html>

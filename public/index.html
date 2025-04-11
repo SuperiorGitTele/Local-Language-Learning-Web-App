@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Language Learning Project</title>
+    <link rel="stylesheet" href="styling/landing.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.12.1/framer-motion.min.js"></script>
+    <script>
+      function redirectToLanguages() {
+        window.location.href = "languages.html";
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <h1 class="logo">AfroLingua(Local Language Learning Web Application)</h1>
+        <ul>
+          <li>
+            <a href="/login.html" class="nav-link">Login</a>
+          </li>
+          <li>
+            <button class="cta" onclick="redirectToLanguages()">
+              Start Learning
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <h2>Unlock the Beauty of African Languages</h2>
+        <p>
+          Learn Yoruba, Hausa, Igbo, and more with AI-powered lessons.
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2025 AfroLingua. All Rights Reserved.</p>
+    </footer>
+  </body>
+</html>

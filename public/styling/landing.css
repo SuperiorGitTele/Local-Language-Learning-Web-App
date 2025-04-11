@@ -1,0 +1,266 @@
+body {
+  font-family: "Poppins", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #fff8dc;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background-color: #fff;
+  padding: 10px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #000000, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+}
+
+nav ul li {
+  display: inline;
+  position: relative;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 8px 15px;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #ffd700;
+}
+
+.cta {
+  background-color: transparent;
+  border: 2px solid transparent;
+  color: #333;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border-radius: 25px;
+  transition: color 0.3s ease;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  border: 2px solid transparent;
+  background: linear-gradient(to right, #000000, #ffd700) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  border-radius: inherit;
+}
+
+.cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, #000000, #ffd700);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s ease;
+}
+
+.cta:hover::after {
+  transform: scaleX(1);
+}
+
+.cta:hover {
+  color: #fff;
+}
+
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 120px 20px;
+  background-color: #333;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  opacity: 0.8;
+  animation: changeBackground 60s infinite;
+}
+
+@keyframes changeBackground {
+  0%, 50% {
+    background-image: url("../assets/images/African1.jpg");
+    opacity: 1;
+  }
+  50%, 100% {
+    background-image: url("../assets/images/African2.jpg");
+    opacity: 1;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  max-width: 800px;
+}
+
+.hero-content h2 {
+  font-size: 2.8rem;
+  margin-bottom: 25px;
+  line-height: 1.2;
+}
+
+.hero-content p {
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+footer {
+  text-align: center;
+  padding: 15px;
+  background-color: #fff;
+  color: #666;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  header {
+    padding: 10px 20px;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  nav ul {
+    gap: 15px;
+  }
+
+  .nav-link {
+    font-size: 0.95rem;
+    padding: 6px 12px;
+  }
+
+  .cta {
+    padding: 8px 15px;
+    font-size: 0.95rem;
+  }
+
+  .hero {
+    padding: 80px 20px;
+  }
+
+  .hero-content h2 {
+    font-size: 2.2rem;
+  }
+
+  .hero-content p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav ul {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .logo {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+  }
+
+  .cta {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+
+  .hero {
+    padding: 60px 15px;
+  }
+
+  .hero-content h2 {
+    font-size: 1.8rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+
+  footer {
+    font-size: 0.85rem;
+  }
+}
